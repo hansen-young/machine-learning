@@ -8,7 +8,7 @@ The Skip-Gram model is used to predict the context words given a target word. It
 
 ### Core Logic
 
-https://www.notion.so/drplatelets/Word2Vec-Skip-Gram-1284be4e49d98049a694e6ce63ab17d8
+https://www.notion.so/drplatelets/Word2Vec-1284be4e49d98049a694e6ce63ab17d8?pvs=4#12a4be4e49d98091ae05f3584ca81e33
 
 ## Directory Structure
 
