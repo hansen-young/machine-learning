@@ -1,0 +1,12 @@
+floor 11
+on 10
+sleeping 9
+is 8
+the 0
+lazy 6
+jumps 4
+dog 7
+fox 3
+brown 2
+over 5
+quick 1
