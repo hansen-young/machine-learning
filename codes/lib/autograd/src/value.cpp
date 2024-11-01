@@ -85,7 +85,7 @@ namespace autograd {
         Value* other_ptr = const_cast<Value*>(&other);
 
         std::vector<Value*> children = {this_ptr, other_ptr};
-        Multiply* op = new Multiply(this_ptr, other_ptr);
+        Add* op = new Add(this_ptr, other_ptr);
         Value out(this->data + other.data, children, op);
 
         out.printGraph();
