@@ -1,4 +1,4 @@
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 
 # Define the library
 add_library(autograd STATIC src/value.cpp src/operators.cpp)

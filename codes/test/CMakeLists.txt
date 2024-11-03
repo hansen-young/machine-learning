@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.0)
 project(test)
 
 # Set the C++ standard
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 
 # Add the library directory as a dependency
 add_subdirectory(../lib ${CMAKE_BINARY_DIR}/lib)

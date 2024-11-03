@@ -15,28 +15,24 @@ namespace autograd {
 
         Operator(const std::string& name);
         virtual ~Operator() = default;
-        virtual void backward(double* cum_grad) = 0;
+        virtual void backward(double* cum_grad, std::vector<Value*>& children) = 0;
     };
 
-    class BinaryOperator : public Operator {
-    protected:
-        Value *left, *right;
+    class _Add : public Operator {
     public:
-        BinaryOperator(const std::string& name, Value* l, Value* r);
-        virtual void backward(double* cum_grad) override = 0;
+        _Add() : Operator("Add") {};
+        virtual void backward(double* cum_grad, std::vector<Value*>& children) override; 
     };
 
-    class Add : public BinaryOperator {
+    class _Multiply : public Operator {
     public:
-        Add(Value* l, Value* r);
-        virtual void backward(double* cum_grad) override; 
+        _Multiply() : Operator("Multiply") {};
+        virtual void backward(double* cum_grad, std::vector<Value*>& children) override;
     };
 
-    class Multiply : public BinaryOperator {
-    public:
-        Multiply(Value* l, Value* r);
-        virtual void backward(double* cum_grad) override;
-    };
+    // Declare the static instances as extern
+    extern _Add Add;
+    extern _Multiply Multiply;
 } // namespace autograd
 
 #endif // AUTOGRAD_OPERATORS_H
