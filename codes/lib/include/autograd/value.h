@@ -8,32 +8,39 @@
 #include "autograd/operators.h"
 
 namespace autograd {
+    // Forward declaration
     class Operator;
+    class Value;
+
+    // Aliases
+    using ValuePtr = std::shared_ptr<Value>;
 
     // Class definition
-    class Value {
+    class Value : public std::enable_shared_from_this<Value> {
     private:
-        static std::unordered_map< Value*, std::shared_ptr<Value> > instances;
-
-        std::vector<Value*> children = std::vector<Value*>();
+        std::vector<ValuePtr> children = std::vector<ValuePtr>();
         Operator* op = nullptr;
-        
+        bool backwardCalled = false;
+
     public:
         double data;
         double* grad = nullptr;
 
         Value(double v);
-        Value(double v, std::vector<Value*>& children, Operator* op);
+        Value(double v, std::vector<ValuePtr>& children, Operator* op);
         ~Value();
 
         // Methods
         void backward();
         void printGraph();
-
-        // Operators
-        Value operator+(const Value& other) const;
-        Value operator*(const Value& other) const;
     };
+
+    // Operators
+    ValuePtr operator+(ValuePtr a, ValuePtr b);
+    ValuePtr operator*(ValuePtr a, ValuePtr b);
+
+    // Functions
+    ValuePtr createValue(double v);
 }
 
 #endif // AUTOGRAD_VALUES_H

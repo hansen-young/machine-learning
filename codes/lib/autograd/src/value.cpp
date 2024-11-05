@@ -4,54 +4,51 @@
 
 
 namespace autograd {
-    std::unordered_map<Value*, std::shared_ptr<Value>> Value::instances;
-
     Value::Value(double v) : data(v) {}
-    Value::Value(double v, std::vector<Value*>& children, Operator* op) : data(v), children(children), op(op) {}
+    Value::Value(double v, std::vector<ValuePtr>& children, Operator* op) : data(v), children(children), op(op) {}
     Value::~Value() { std::cout << "Deconstructor of Value(x=" << this->data << ")" << std::endl; }
 
     void Value::printGraph() {
-        std::queue<Value*> valueQueue;
-        valueQueue.push(this);
+        std::queue<ValuePtr> valueQueue;
+        valueQueue.push(shared_from_this());
 
         std::cout << "-------- CURRENT GRAPH --------" << std::endl;
 
         while (!valueQueue.empty()) {
-            Value* current = valueQueue.front();
+            ValuePtr current = valueQueue.front();
             valueQueue.pop();
 
-            std::cout << "current: " << current->data << " | addr: " << current << std::endl;
-            if (current->op != nullptr) { std::cout << "     op: " << current->op->name << std::endl; }
+            std::cout << current->data << " (" << current << ") | grad: ";
+            if (current->grad != nullptr) { std::cout << *current->grad << std::endl; }
+            else { std::cout << "null" << std::endl; }
+
+            if (current->op != nullptr) { std::cout << "op: " << current->op->name << std::endl; }
             std::cout << "num_children: " << current->children.size() << std::endl;
 
-            for(Value*& child : current->children) {
-                std::cout << "  child: " << child->data << std::endl;
-            }
-
-            for(Value*& child : current->children) {
+            for(ValuePtr child : current->children) {
+                std::cout << "  child: " << child->data << " (" << child << ")" << std::endl;
                 valueQueue.push(child);
             }
 
             std::cout << std::endl;
         }
-
         std::cout << "-------------------------------\n";
     }
-    
-    void Value::backward() { 
-        std::queue<Value*> valueQueue;
-        valueQueue.push(this);
+
+    void Value::backward() {
+        std::queue<ValuePtr> valueQueue;
+        valueQueue.push(shared_from_this());
 
         while (!valueQueue.empty()) {
-            Value* current = valueQueue.front();
+            ValuePtr current = valueQueue.front();
             valueQueue.pop();
 
-            // If this is a top-level value, then it is not derived from 
+            // If this is a top-level value, then it is not derived from
             // any other value and hence there is nothing to backpropagate.
             if (current->op == nullptr) { continue; }
 
             // If .backward() is already called, then raise an error.
-            if (current->op->backwardCalled) {
+            if (current->backwardCalled) {
                 throw std::runtime_error(".backward() called more than once");
             }
 
@@ -59,44 +56,33 @@ namespace autograd {
             if (current->grad == nullptr) { current->grad = new double(1); }
 
             // If the children of this value do not have a gradient, then initialize it to 0.
-            for(auto& child : current->children) {
+            for(ValuePtr child : current->children) {
                 if (child->grad == nullptr) { child->grad = new double(0); }
             }
 
             // Run the backward pass of the operator
-            current->op->backward(current->grad, current->children); 
-
-            // Mark the operator as backward called
-            current->op->backwardCalled = true;
+            current->op->backward(current->grad, current->children);
+            current->backwardCalled = true;
 
             // Add the children to the stack
-            for(auto& child : current->children) {
+            for(ValuePtr child : current->children) {
                 valueQueue.push(child);
             }
         }
     }
 
-    Value Value::operator+(const Value& other) const {
-        Value* this_ptr = const_cast<Value*>(this);
-        Value* other_ptr = const_cast<Value*>(&other);
-        std::vector<Value*> children = {this_ptr, other_ptr};
-
-        // auto this_ptr = std::make_unique<Value>(*this);
-        // auto other_ptr = std::make_unique<Value>(other);
-        // std::vector<Value*> children = {this_ptr.get(), other_ptr.get()};
-        Value out(this->data + other.data, children, &Add);
-        instances[&out] = std::shared_ptr<Value>(&out);
-
-        return out;
+    ValuePtr operator+(ValuePtr a, ValuePtr b) {
+        std::vector<ValuePtr> children = {a, b};
+        return std::make_shared<Value>(a->data + b->data, children, &Add);
     }
 
-    Value Value::operator*(const Value& other) const {
-        Value* this_ptr = const_cast<Value*>(this);
-        Value* other_ptr = const_cast<Value*>(&other);
-        std::vector<Value*> children = {this_ptr, other_ptr};
-        Value out(this->data * other.data, children, &Multiply);
+    ValuePtr operator*(ValuePtr a, ValuePtr b) {
+        std::vector<ValuePtr> children = {a, b};
+        return std::make_shared<Value>(a->data * b->data, children, &Multiply);
+    }
 
-        return out;
+    ValuePtr createValue(double v) {
+        return std::make_shared<Value>(v);
     }
 } // namespace autograd
 
@@ -131,7 +117,7 @@ x0.operator = Multiply(a, b)
 stack = [d]
 
 // if d.grad == nullptr then d.grad = 1
-Add.backward(d.grad) will compute 
+Add.backward(d.grad) will compute
     x0.grad += 1 * d.grad
     x1.grad += 1 * d.grad
 
