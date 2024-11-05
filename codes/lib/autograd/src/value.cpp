@@ -71,16 +71,6 @@ namespace autograd {
         }
     }
 
-    ValuePtr operator+(ValuePtr a, ValuePtr b) {
-        std::vector<ValuePtr> children = {a, b};
-        return std::make_shared<Value>(a->data + b->data, children, &Add);
-    }
-
-    ValuePtr operator*(ValuePtr a, ValuePtr b) {
-        std::vector<ValuePtr> children = {a, b};
-        return std::make_shared<Value>(a->data * b->data, children, &Multiply);
-    }
-
     ValuePtr createValue(double v) {
         return std::make_shared<Value>(v);
     }

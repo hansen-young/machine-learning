@@ -35,10 +35,6 @@ namespace autograd {
         void printGraph();
     };
 
-    // Operators
-    ValuePtr operator+(ValuePtr a, ValuePtr b);
-    ValuePtr operator*(ValuePtr a, ValuePtr b);
-
     // Functions
     ValuePtr createValue(double v);
 }
