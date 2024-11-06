@@ -31,6 +31,7 @@ namespace autograd {
 
         // Methods
         void backward();
+        void zeroGrad();
         void printGraph();
 
         ValuePtr childAt(int index);

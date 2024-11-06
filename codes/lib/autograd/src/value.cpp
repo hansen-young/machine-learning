@@ -7,7 +7,8 @@ namespace autograd {
     Value::Value(double v) : data(v) {}
     Value::Value(double v, bool requiresGrad) : data(v), requiresGrad(requiresGrad) {}
     Value::Value(double v, std::vector<ValuePtr>& children, Operator* op, bool requiresGrad) : data(v), children(children), op(op), requiresGrad(requiresGrad) {}
-    Value::~Value() { std::cout << "Deconstructor of Value(x=" << this->data << ")" << std::endl; }
+    // Value::~Value() { std::cout << "Deconstructor of Value(x=" << this->data << ")" << std::endl; }
+    Value::~Value() {}
 
     void Value::printGraph() {
         std::queue<ValuePtr> valueQueue;
@@ -71,6 +72,26 @@ namespace autograd {
             // Add the children to the stack
             for(ValuePtr child : current->children) {
                 valueQueue.push(child);
+            }
+        }
+    }
+
+    void Value::zeroGrad() {
+        std::queue<ValuePtr> valueQueue;
+        valueQueue.push(shared_from_this());
+
+        while (!valueQueue.empty()) {
+            ValuePtr current = valueQueue.front();
+            valueQueue.pop();
+
+            if (current->grad != nullptr) {
+                current->grad = nullptr;
+            }
+
+            for(ValuePtr child : current->children) {
+                if (child->requiresGrad) {
+                    valueQueue.push(child);
+                }
             }
         }
     }

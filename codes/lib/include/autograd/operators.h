@@ -58,6 +58,12 @@ namespace autograd {
         virtual void backward(ValuePtr node) override;
     };
 
+    class _Sqrt : public Operator {
+    public:
+        _Sqrt() : Operator("Sqrt") {};
+        virtual void backward(ValuePtr node) override;
+    };
+
     // Declare the static instances as extern
     extern _UnaryMinus UnaryMinus;
     extern _Add Add;
@@ -65,6 +71,7 @@ namespace autograd {
     extern _Multiply Multiply;
     extern _Divide Divide;
     extern _Pow Pow;
+    extern _Sqrt Sqrt;
 
     // Functions
     ValuePtr operator-(ValuePtr a);  // Unary minus (negation)
@@ -73,6 +80,7 @@ namespace autograd {
     ValuePtr operator*(ValuePtr a, ValuePtr b);
     ValuePtr operator/(ValuePtr a, ValuePtr b);
     ValuePtr pow(ValuePtr a, ValuePtr b);
+    ValuePtr sqrt(ValuePtr a);
 
     ValuePtr operator+(ValuePtr a, double scalar);
     ValuePtr operator+(double scalar, ValuePtr a);
@@ -84,6 +92,7 @@ namespace autograd {
     ValuePtr operator/(double scalar, ValuePtr a);
     ValuePtr pow(ValuePtr a, double scalar);
     ValuePtr pow(double scalar, ValuePtr a);
+    ValuePtr sqrt(double scalar);
 } // namespace autograd
 
 #endif // AUTOGRAD_OPERATORS_H

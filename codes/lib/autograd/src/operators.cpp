@@ -11,6 +11,7 @@ namespace autograd {
     _Multiply Multiply;
     _Divide Divide;
     _Pow Pow;
+    _Sqrt Sqrt;
 
     // Helper functions
     void throwIfChildrenNotEqual(Operator* o, int childrenSize, int expected) {
@@ -72,6 +73,14 @@ namespace autograd {
         }
     }
 
+    void _Sqrt::backward(ValuePtr node) {
+        // y = sqrt(a) -> dy/da = 1 / (2 * sqrt(a)) = 1 / (2 * y)
+        throwIfChildrenNotEqual(this, node->childrenSize(), 1);
+        if (node->childAt(0)->requiresGrad){
+            *(node->childAt(0)->grad) += 1 / (2 * node->data) * *(node->grad);
+        }
+    }
+
     // Functions
     ValuePtr operator-(ValuePtr a) {
         std::vector<ValuePtr> children = {a};
@@ -101,6 +110,11 @@ namespace autograd {
     ValuePtr pow(ValuePtr a, ValuePtr b) {
         std::vector<ValuePtr> children = {a, b};
         return std::make_shared<Value>(std::pow(a->data, b->data), children, &Pow, a->requiresGrad | b->requiresGrad);
+    }
+
+    ValuePtr sqrt(ValuePtr a) {
+        std::vector<ValuePtr> children = {a};
+        return std::make_shared<Value>(std::sqrt(a->data), children, &Sqrt, a->requiresGrad);
     }
 
     ValuePtr operator+(ValuePtr a, double scalar) {
@@ -145,5 +159,9 @@ namespace autograd {
     ValuePtr pow(double scalar, ValuePtr a) {
         std::vector<ValuePtr> children = {std::make_shared<Value>(scalar), a};
         return std::make_shared<Value>(std::pow(scalar, a->data), children, &Pow, a->requiresGrad);
+    }
+
+    ValuePtr sqrt(double scalar) {
+        return std::make_shared<Value>(std::sqrt(scalar));
     }
 } // namespace autograd
