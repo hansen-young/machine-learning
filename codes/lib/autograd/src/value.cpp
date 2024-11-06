@@ -1,11 +1,12 @@
-#include "autograd/autograd.h"
 #include <iostream>
 #include <queue>
+#include "autograd/autograd.h"
 
 
 namespace autograd {
     Value::Value(double v) : data(v) {}
-    Value::Value(double v, std::vector<ValuePtr>& children, Operator* op) : data(v), children(children), op(op) {}
+    Value::Value(double v, bool requiresGrad) : data(v), requiresGrad(requiresGrad) {}
+    Value::Value(double v, std::vector<ValuePtr>& children, Operator* op, bool requiresGrad) : data(v), children(children), op(op), requiresGrad(requiresGrad) {}
     Value::~Value() { std::cout << "Deconstructor of Value(x=" << this->data << ")" << std::endl; }
 
     void Value::printGraph() {
@@ -43,6 +44,9 @@ namespace autograd {
             ValuePtr current = valueQueue.front();
             valueQueue.pop();
 
+            // If this node does not require gradient, then skip it.
+            if (!current->requiresGrad) { continue; }
+
             // If this is a top-level value, then it is not derived from
             // any other value and hence there is nothing to backpropagate.
             if (current->op == nullptr) { continue; }
@@ -57,11 +61,11 @@ namespace autograd {
 
             // If the children of this value do not have a gradient, then initialize it to 0.
             for(ValuePtr child : current->children) {
-                if (child->grad == nullptr) { child->grad = new double(0); }
+                if (child->requiresGrad && child->grad == nullptr) { child->grad = new double(0); }
             }
 
             // Run the backward pass of the operator
-            current->op->backward(current->grad, current->children);
+            current->op->backward(current);
             current->backwardCalled = true;
 
             // Add the children to the stack
@@ -71,8 +75,12 @@ namespace autograd {
         }
     }
 
-    ValuePtr createValue(double v) {
-        return std::make_shared<Value>(v);
+    ValuePtr Value::childAt(int index) { return this->children[index]; }
+
+    int Value::childrenSize() { return this->children.size(); }
+
+    ValuePtr createValue(double v, bool requiresGrad) {
+        return std::make_shared<Value>(v, requiresGrad);
     }
 } // namespace autograd
 

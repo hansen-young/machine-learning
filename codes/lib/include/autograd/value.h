@@ -2,9 +2,6 @@
 #define AUTOGRAD_VALUES_H
 
 #include <vector>
-#include <functional>
-#include <memory>
-#include <map>
 #include "autograd/operators.h"
 
 namespace autograd {
@@ -25,18 +22,23 @@ namespace autograd {
     public:
         double data;
         double* grad = nullptr;
+        bool requiresGrad = false;
 
         Value(double v);
-        Value(double v, std::vector<ValuePtr>& children, Operator* op);
+        Value(double v, bool requiresGrad);
+        Value(double v, std::vector<ValuePtr>& children, Operator* op, bool requiresGrad);
         ~Value();
 
         // Methods
         void backward();
         void printGraph();
+
+        ValuePtr childAt(int index);
+        int childrenSize();
     };
 
     // Functions
-    ValuePtr createValue(double v);
+    ValuePtr createValue(double v, bool requiresGrad);
 }
 
 #endif // AUTOGRAD_VALUES_H
